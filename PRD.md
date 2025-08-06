@@ -14,14 +14,12 @@ CSV Upload → Agent 1 → Agent 2 → Agent 3 → Agent 4 → Agent 5 → Resul
              (Ingest)  (Clean)   (Analyze) (Visualize) (Report)
 ```
 
-## 🔧 **Required MCP Servers (4 Total)**
+## 🔧 **Required MCP Servers (2 Total)**
 
 ```yaml
 MCP Servers for MVP:
   1. filesystem_mcp: "@modelcontextprotocol/server-filesystem" (File operations)
-  2. pandas_mcp: "pandas-mcp-server" (Data processing) 
-  3. data_exploration_mcp: "mcp-server-data-exploration" (Auto insights)
-  4. sqlite_mcp: "@modelcontextprotocol/server-sqlite" (Optional storage)
+  2. data_exploration_mcp: "mcp-server-data-exploration" (Auto insights)
 ```
 
 ## 📁 **Super Simple File Structure**
@@ -76,7 +74,6 @@ ollama serve
 streamlit==1.39.0
 crewai==0.86.0
 crewai-tools>=0.18.0
-pandas==2.2.3
 matplotlib==3.9.2
 plotly==5.24.1
 python-dotenv==1.0.1
@@ -91,11 +88,9 @@ pip install -r requirements.txt
 
 ## **1.4 Install MCP Servers**
 ```bash
-# Install 4 MCP servers (takes 3-5 minutes)
+# Install 2 MCP servers (takes 2-3 minutes)
 npx -y @modelcontextprotocol/server-filesystem
-uvx pandas-mcp-server
-uvx mcp-server-data-exploration  
-npx -y @modelcontextprotocol/server-sqlite
+uvx mcp-server-data-exploration
 ```
 
 ## **1.5 Create .env File**
@@ -145,19 +140,9 @@ class MCPDataFlowPipeline:
                 'args': ['-y', '@modelcontextprotocol/server-filesystem'],
                 'transport': 'stdio'
             },
-            'pandas': {
-                'command': 'uvx',
-                'args': ['pandas-mcp-server'],
-                'transport': 'stdio'
-            },
             'data_exploration': {
                 'command': 'uvx', 
                 'args': ['mcp-server-data-exploration'],
-                'transport': 'stdio'
-            },
-            'sqlite': {
-                'command': 'npx',
-                'args': ['-y', '@modelcontextprotocol/server-sqlite'],
                 'transport': 'stdio'
             }
         }
@@ -195,9 +180,9 @@ class MCPDataFlowPipeline:
         # Agent 2: Data Quality Engineer  
         cleaning_agent = Agent(
             role='Data Quality Engineer',
-            goal='Clean and preprocess CSV data using pandas MCP',
+            goal='Clean and preprocess CSV data using data exploration MCP',
             backstory='You are a specialist in data cleaning, missing values, and data standardization. You explain your cleaning decisions clearly.',
-            tools=[tool for tool in [self.mcp_tools.get('pandas'), self.mcp_tools.get('filesystem')] if tool],
+            tools=[tool for tool in [self.mcp_tools.get('data_exploration'), self.mcp_tools.get('filesystem')] if tool],
             verbose=True,
             allow_delegation=False,
             llm=self.llm
@@ -208,7 +193,7 @@ class MCPDataFlowPipeline:
             role='Statistical Analyst', 
             goal='Perform comprehensive data analysis using data exploration MCP',
             backstory='You are an expert at finding patterns, correlations, and insights in data. You provide actionable insights from statistical analysis.',
-            tools=[tool for tool in [self.mcp_tools.get('data_exploration'), self.mcp_tools.get('pandas')] if tool],
+            tools=[tool for tool in [self.mcp_tools.get('data_exploration'), self.mcp_tools.get('filesystem')] if tool],
             verbose=True,
             allow_delegation=False,
             llm=self.llm
@@ -217,9 +202,9 @@ class MCPDataFlowPipeline:
         # Agent 4: Visualization Specialist
         viz_agent = Agent(
             role='Visualization Specialist',
-            goal='Create charts and visualizations using pandas MCP',
+            goal='Create charts and visualizations using data exploration MCP',
             backstory='You are an expert at creating clear, informative data visualizations that tell a story with data.',
-            tools=[self.mcp_tools.get('pandas')] if self.mcp_tools.get('pandas') else [],
+            tools=[self.mcp_tools.get('data_exploration')] if self.mcp_tools.get('data_exploration') else [],
             verbose=True,
             allow_delegation=False,
             llm=self.llm
@@ -230,7 +215,7 @@ class MCPDataFlowPipeline:
             role='Report Generator',
             goal='Synthesize all findings into a comprehensive report',
             backstory='You are a technical writer who creates clear, actionable data reports that business stakeholders can understand and act upon.',
-            tools=[tool for tool in [self.mcp_tools.get('pandas'), self.mcp_tools.get('sqlite')] if tool],
+            tools=[tool for tool in [self.mcp_tools.get('data_exploration'), self.mcp_tools.get('filesystem')] if tool],
             verbose=True,
             allow_delegation=False,
             llm=self.llm
@@ -263,7 +248,7 @@ class MCPDataFlowPipeline:
         # Task 2: Data Cleaning  
         cleaning_task = Task(
             description="""
-            Clean the CSV data using pandas MCP tools.
+            Clean the CSV data using data exploration MCP tools.
             
             Your task:
             1. Handle missing values (fill, remove, or flag them)
@@ -301,7 +286,7 @@ class MCPDataFlowPipeline:
         # Task 4: Data Visualization
         viz_task = Task(
             description="""
-            Create visualizations to show the key findings.
+            Create visualizations to show the key findings using data exploration MCP.
             
             Your task:
             1. Make 2-3 charts that highlight the most important patterns
@@ -390,7 +375,6 @@ def create_pipeline():
 ```python
 # main.py - Complete Streamlit application
 import streamlit as st
-import pandas as pd
 import os
 import asyncio
 import tempfile
@@ -428,9 +412,7 @@ with st.sidebar:
     
     st.markdown("**MCP Servers Status:**")
     st.success("✅ Filesystem MCP")
-    st.success("✅ Pandas MCP") 
     st.success("✅ Data Exploration MCP")
-    st.info("ℹ️ SQLite MCP (Optional)")
     
     st.markdown("---")
     st.markdown("**Pipeline Steps:**")
@@ -460,10 +442,17 @@ with col1:
         
         # Preview data
         try:
-            df = pd.read_csv(uploaded_file)
+            # Read file content for preview
+            file_content = uploaded_file.read()
+            uploaded_file.seek(0)  # Reset file pointer
+            
+            # Show first few lines as preview
+            lines = file_content.decode('utf-8').split('\n')[:5]
+            preview_data = '\n'.join(lines)
+            
             st.markdown("**Data Preview:**")
-            st.dataframe(df.head(3), use_container_width=True)
-            st.caption(f"Shape: {df.shape[0]} rows × {df.shape[1]} columns")
+            st.code(preview_data, language='csv')
+            st.caption(f"Showing first 5 lines of {uploaded_file.name}")
         except Exception as e:
             st.error(f"Error reading file: {e}")
 
@@ -653,7 +642,7 @@ After 60 minutes, you should have:
 
 - [ ] **Ollama running** with Qwen3:8b model loaded
 - [ ] **Working Streamlit UI** with file upload
-- [ ] **4 MCP servers** initialized and connected
+- [ ] **2 MCP servers** initialized and connected
 - [ ] **5 AI agents** using Ollama LLM in a sequential CrewAI crew
 - [ ] **CSV processing pipeline** that takes uploaded files through all stages
 - [ ] **Progress tracking** showing each agent's work

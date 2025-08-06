@@ -1,7 +1,6 @@
 # main.py - Dynamic Chat Interface with CrewAI
 import warnings
 import streamlit as st
-import pandas as pd
 import os
 import asyncio
 import tempfile
@@ -53,9 +52,7 @@ with st.sidebar:
     
     st.markdown("**MCP Servers Status:**")
     st.success("✅ Filesystem MCP")
-    st.success("✅ Pandas MCP") 
     st.success("✅ Data Exploration MCP")
-    st.info("ℹ️ SQLite MCP (Optional)")
     
     st.markdown("---")
     st.markdown("**Available Agents:**")
@@ -99,10 +96,17 @@ if uploaded_file is not None:
         
         # Preview data
         try:
-            df = pd.read_csv(uploaded_file)
+            # Read file content for preview
+            file_content = uploaded_file.read()
+            uploaded_file.seek(0)  # Reset file pointer
+            
+            # Show first few lines as preview
+            lines = file_content.decode('utf-8').split('\n')[:5]
+            preview_data = '\n'.join(lines)
+            
             st.markdown("**Data Preview:**")
-            st.dataframe(df.head(3), use_container_width=True)
-            st.caption(f"Shape: {df.shape[0]} rows × {df.shape[1]} columns")
+            st.code(preview_data, language='csv')
+            st.caption(f"Showing first 5 lines of {uploaded_file.name}")
         except Exception as e:
             st.error(f"Error reading file: {e}")
 

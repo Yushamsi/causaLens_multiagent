@@ -1,0 +1,6 @@
+{
+  "setup": {
+    "status": "FAIL",
+    "error": "No MCP tools were initialized"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "mcp_imports": {
+    "status": "FAIL",
+    "error": "No module named 'mcp'"
+  },
+  "stdio_server_creation": {
+    "status": "FAIL",
+    "error": "No module named 'mcp'"
+  },
+  "sse_server_creation": {
+    "status": "FAIL",
+    "error": "No module named 'crewai_tools'"
+  },
+  "mcp_adapter_creation": {
+    "status": "FAIL",
+    "error": "No module named 'mcp'"
+  },
+  "agents_mcp_integration": {
+    "status": "FAIL",
+    "error": "No module named 'crewai'"
+  },
+  "crewai_with_mcp_tools": {
+    "status": "FAIL",
+    "error": "No module named 'crewai'"
+  }
+}

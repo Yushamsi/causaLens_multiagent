@@ -1,0 +1,26 @@
+{
+  "crewai_import": {
+    "status": "PASS",
+    "message": "All CrewAI classes imported successfully"
+  },
+  "agent_creation": {
+    "status": "PASS",
+    "agent_role": "Test Agent",
+    "agent_goal": "Test the agent creation functionality"
+  },
+  "task_creation": {
+    "status": "PASS",
+    "task_description": "Test task description",
+    "expected_output": "Test output"
+  },
+  "crew_creation": {
+    "status": "PASS",
+    "num_agents": 2,
+    "num_tasks": 2,
+    "process": "Process.sequential"
+  },
+  "ollama_connection": {
+    "status": "PASS",
+    "message": "Ollama server is running"
+  }
+}
